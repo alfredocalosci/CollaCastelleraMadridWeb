@@ -1,13 +1,28 @@
-const SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqT6tQjxi8a_qKuT6fnNfoTXKVIMRWKHD2Qq7I-9c-tM3_PRM-_TEpdyCTGSKgu7jpDdB_jV-Wo2II/pub?gid=0&single=true&output=tsv'
+export default defineEventHandler(async () => {
+  const [actuacionesCSV, castellsCSV, imagesCSV] = await Promise.all([
+    readLocalCSV(DATA_SOURCES.actuaciones.file),
+    readLocalCSV(DATA_SOURCES.castells.file),
+    readLocalCSV(DATA_SOURCES.imgActuaciones.file).catch(() => ''),
+  ])
 
-export default defineCachedEventHandler(async () => {
-  const tsv = await $fetch<string>(SHEET_URL)
+  const actuaciones = parseCSV(actuacionesCSV)
+  const castells_list = parseCSV(castellsCSV).map(c => ({ ...c, score: Number(c.score) }))
 
-  const [headerLine, ...rows] = tsv.trim().split('\n')
-  const headers = headerLine.split('\t')
+  const collas = [...new Set(
+    actuaciones.flatMap(a => (a.con ?? '').split(',').map(c => c.trim()).filter(Boolean)),
+  )].sort((a, b) => a.localeCompare(b, 'ca'))
 
-  return rows.map(row =>
-    Object.fromEntries(row.split('\t').map((val, i) => [headers[i].trim(), val.trim()]))
-  )
-}, { maxAge: 60 * 10 })
+  // images grouped by event id, in sheet order
+  const images: Record<string, GalleryImage[]> = {}
+  if (imagesCSV.trim()) {
+    for (const row of parseCSV(imagesCSV)) {
+      const id = (row['event-id'] ?? row.event_id ?? row.id ?? '').trim()
+      const { img, full } = resolveImageUrls(row.img ?? '')
+      if (!id || !img) continue
+      const list = (images[id] ??= [])
+      list.push({ rank: String(list.length + 1), img, full, texto: row.text ?? row.texto ?? '' })
+    }
+  }
+
+  return { actuaciones, castells_list, collas, images }
+})

@@ -1,0 +1,65 @@
+id,fecha,tipo,nombre,ciudad,lugar,hora
+E_2026_04_08,2026-04-08,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_04_10,2026-04-10,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_04_15,2026-04-15,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_04_17,2026-04-17,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_04_18,2026-04-18,actuación,Paella Republicana,Madrid,Arroyo del Olivar,
+E_2026_04_22,2026-04-22,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_04_24,2026-04-24,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_04_25,2026-04-25,actuación,Festa Major Cercle Català de Madrid,,Plaza de España,18:00
+E_2026_05_06,2026-05-06,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_05_08,2026-05-08,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_05_13,2026-05-13,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_05_15,2026-05-15,ensayo especial,San Isidro,Madrid,,12:00
+E_2026_05_17,2026-05-17,actuación,Encuentro de Casas Regionales,Madrid,Plaza Mayor,12:00
+E_2026_05_20,2026-05-20,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_05_22,2026-05-22,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_05_27,2026-05-27,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_05_29,2026-05-29,viaje,Viaje a Valls,Valls,,
+E_2026_05_30,2026-05-30,viaje,Viaje a Valls,Valls,,
+E_2026_05_31,2026-05-31,actuación,Diada Ramon Barrufet,Valls,Plaça de la Fusta,12:00
+E_2026_06_05,2026-06-05,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_06_10,2026-06-10,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_06_12,2026-06-12,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_06_13,2026-06-13,otro,Día de la Infancia de Vallecas,Madrid,,
+E_2026_06_17,2026-06-17,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_06_19,2026-06-19,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_06_20,2026-06-20,actuación,Taller y Actuación,Madrid,Palomeras Baja,18:00
+E_2026_08_26,2026-08-26,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_08_28,2026-08-28,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_09_02,2026-09-02,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_09_04,2026-09-04,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_09_09,2026-09-09,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_09_11,2026-09-11,actuación,Diada de Catalunya,Madrid,Paseo de Recoletos,20:00
+E_2026_09_13,2026-09-13,otro,Reunión Reglamento Interno,Madrid,Cercle Catalá,12:00
+E_2026_09_16,2026-09-16,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_09_18,2026-09-18,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_09_23,2026-09-23,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_09_25,2026-09-25,ensayo especial,Enreda Vallekas,Madrid,Mirador Cerro del tio pío,19:30
+E_2026_09_27,2026-09-27,ensayo especial,Ensayo Especial,Madrid,Local,12:00
+E_2026_09_30,2026-09-30,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_10_02,2026-10-02,viaje,viaje a Tarragona,,,
+E_2026_10_03,2026-10-03,actuación,Diada Internacional de Colles Castelleres ,Tarragona,Plaza de la Font,11:00
+E_2026_10_04,2026-10-04,viaje,viaje a Tarragona,,,
+E_2026_10_09,2026-10-09,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_10_14,2026-10-14,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_10_16,2026-10-16,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_10_18,2026-10-18,actuación,Aplec,El Paular,Real Monasterio de Santa María,12:00
+E_2026_10_21,2026-10-21,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_10_23,2026-10-23,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_10_28,2026-10-28,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_10_30,2026-10-30,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_11_04,2026-11-04,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_11_06,2026-11-06,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_11_07,2026-11-07,actuación,II Memorial Josep María Cuscó,Madrid,por determinar,16:00
+E_2026_11_11,2026-11-11,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_11_13,2026-11-13,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_11_18,2026-11-18,ensayo,Ensayo,Madrid,Local,19:00
+E_2026_11_20,2026-11-20,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_11_27,2026-11-27,ensayo,Ensayo,Madrid,Local,19:30
+E_2026_11_28,2026-11-28,otro,Cena Fin de Temporada,Madrid,por determinar,21:00
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,

@@ -1,33 +1,20 @@
-const SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqT6tQjxi8a_qKuT6fnNfoTXKVIMRWKHD2Qq7I-9c-tM3_PRM-_TEpdyCTGSKgu7jpDdB_jV-Wo2II/pub?gid=1900393250&single=true&output=csv'
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function parseCSVRow(row: string): string[] {
-  const fields: string[] = []
-  let current = ''
-  let inQuotes = false
-  for (let i = 0; i < row.length; i++) {
-    const char = row[i]
-    if (char === '"') {
-      if (inQuotes && row[i + 1] === '"') { current += '"'; i++ } // escaped quote
-      else inQuotes = !inQuotes
-    } else if (char === ',' && !inQuotes) {
-      fields.push(current.trim())
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  fields.push(current.trim())
-  return fields
+// The CSV holds Date.toString() output ("Sat Oct 03 2026 00:00:00 GMT+0200 ...").
+// Read the calendar day as written; going through toISOString() converts to UTC and shifts it back a day.
+function toISODay(fecha: string): string {
+  const m = fecha.match(/^\w{3} (\w{3}) (\d{2}) (\d{4})/)
+  const month = m ? MONTHS.indexOf(m[1]!) : -1
+  if (!m || month < 0) return new Date(fecha).toISOString().substring(0, 10)
+  return `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2]}`
 }
 
-export default defineCachedEventHandler(async () => {
-  const csv = await $fetch<string>(SHEET_URL)
-
-  const [headerLine, ...rows] = csv.trim().split('\n')
-  const headers = parseCSVRow(headerLine)
-
-  return rows
-    .filter(row => row.trim())
-    .map(row => Object.fromEntries(parseCSVRow(row).map((val, i) => [headers[i], val])))
-}, { maxAge: 60 * 10 })
+export default defineEventHandler(async () => {
+  const csv = await readLocalCSV(DATA_SOURCES.calendario.file)
+  return (parseCSV(csv) as unknown as CalendarEvent[])
+    .filter(item => item.fecha && item.nombre)
+    .map(item => ({
+      ...item,
+      fecha: toISODay(item.fecha)
+    }))
+})

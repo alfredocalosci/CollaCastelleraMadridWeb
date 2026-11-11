@@ -1,10 +1,7 @@
 <script lang="ts" setup>
   // import { popover } from '#build/ui';
 
-  // use await in production
-  // test without it to see loading elements in dev mode
-  const { data: calendario } = await useFetch('/api/calendario')
-  // const { data: calendario } =  useFetch('/api/calendario')
+  const { data: calendario } = await useFetch<CalendarEvent[]>('/api/calendario')
 
   watch(calendario, (val) => {
     console.log('calendario:', val)
@@ -52,7 +49,7 @@
 
   const eventsTypes = [
     { name: 'ensayo', color: 'gray', text_class:'text-gray-700' },
-    { name: 'ensayo especial', color: 'gray', text_class:'text-gray-700' },
+    { name: 'ensayo especial', color: 'blue', text_class:'text-gray-700' },
     { name: 'actuación', color: 'ccm-red', text_class:'text-rosso-500' },
     { name: 'viaje', color: 'orange', text_class:'text-orange-500' },
     { name: 'otro', color: 'yellow', text_class:'text-yellow-400' },
@@ -73,7 +70,7 @@
       return {
         key: `event-${item.id}`,
         highlight: eventType ? eventType.color : 'blue',
-        dates: item.fecha.split('/').reverse().join('-'),
+        dates: new Date(item.fecha),
       }
     })
 
@@ -84,8 +81,8 @@
   const thisMonthEvents = computed(() => {
     if (!calendario.value) return []
     return calendario.value.filter((item) => {
-      const [d, m, y] = item.fecha.split('/')
-      return Number(m) === activeMonth.value && Number(y) === activeYear.value
+      const date = new Date(item.fecha)
+      return date.getMonth() + 1 === activeMonth.value && date.getFullYear() === activeYear.value
     })
   })
     
@@ -158,7 +155,14 @@
 
     <div>
       <section class="ccm_container pt-12 pb-24">
-        <p>calendario page content</p>
+        <UButton
+              to="https://tinyurl.com/CalendarioCCM2025"
+              target="_blank" rel="noopener noreferrer"
+              icon="mdi:arrow-top-right-thick"
+              :ui="{ base: 'rounded-none' }"
+              size="xl"
+              class="bg-rosso-500 hover:bg-black transition-colors duration-300 text-white  shadow-lg w-full uppercase font-display cursor-pointer "
+            >GOOGLE CALENDAR</UButton>
       </section>
     </div>
 

@@ -22,31 +22,63 @@
         </header>
 
         <!-- Main content area for the image -->
-        <main class="flex-1 min-h-0 p-6 pb-12 flex items-center justify-center ">
-          <NuxtImg 
-            :src="selectedImage" 
-            :alt="'Selected image'"
+        <main
+          class="relative flex-1 min-h-0 p-6 pb-12 flex items-center justify-center touch-pan-y select-none"
+          @pointerdown="onPointerDown"
+          @pointerup="onPointerUp"
+          @click.capture="onClickCapture"
+        >
+          <button
+            v-if="hasMultiple"
+            type="button"
+            aria-label="Previous image"
+            class="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white hover:text-nrj-500 transition-colors cursor-pointer"
+            @click.stop="showPrev"
+          >
+            <Icon name="mdi:chevron-left" size="48" />
+          </button>
+
+          <NuxtImg
+            :key="selectedImage"
+            :src="selectedImage"
+            :alt="selectedAlt"
             class="max-w-full max-h-full object-contain"
+            draggable="false"
             @click="closeModal"
           />
+
+          <button
+            v-if="hasMultiple"
+            type="button"
+            aria-label="Next image"
+            class="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white hover:text-nrj-500 transition-colors cursor-pointer"
+            @click.stop="showNext"
+          >
+            <Icon name="mdi:chevron-right" size="48" />
+          </button>
+
+          <p v-if="hasMultiple" class="absolute bottom-3 left-0 right-0 text-center text-sm text-white/70">
+            {{ selectedIndex + 1 }} / {{ props.images.length }}
+          </p>
         </main>
-        
+
       </div>
     </div>
   </Teleport>
 
   <!-- image grid -->
-  <div class="columns-1 md:columns-4 md:gap-4 md:space-y-4">
+  <div class="columns-1 md:columns-4 md:gap-4 md:space-y-4 w-full">
     <div 
       v-for="(image, index) in props.images" 
       :key="index"
       class="break-inside-avoid mb-4"
     >
-      <NuxtImg 
-        :src="image" 
-        :alt="`Gallery image ${index + 1}`"
+      <NuxtImg
+        :src="image.img"
+        :alt="image.texto || `Gallery image ${index + 1}`"
         class="w-full h-auto rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-        @click="openModal(image)"
+        loading="lazy"
+        @click="openModal(index)"
       />
     </div>
   </div>
@@ -54,31 +86,110 @@
 
 <script lang="ts" setup>
   const modalOpen = ref(false);
-  const selectedImage = ref('');
 
   const props = withDefaults(defineProps<{
-    images?: Array<string>;
+    images?: GalleryImage[]
   }>(), {
     images: () => [
-      'https://collacastellerademadrid.net/cloud/index.php/s/Q6GSWciocNg6a5C/preview',
-      'https://collacastellerademadrid.net/cloud/index.php/s/LrCcZBcgQGQRAQZ/preview',
-      'https://collacastellerademadrid.net/cloud/index.php/s/i9mZj3wjpbtwNxa/preview',
-      'https://collacastellerademadrid.net/cloud/index.php/apps/files_sharing/publicpreview/X8TgtMGTWD3BxDn?fileId=78151&file=/2025/13.%20Diada%20Xiquets%20de%20Reus/Whatsapps%20varios/IMG-20251027-WA0035.jpg&x=1512&y=982&a=true',
-      'https://collacastellerademadrid.net/cloud/index.php/apps/files_sharing/publicpreview/X8TgtMGTWD3BxDn?fileId=82190&file=/2026/2.%20Villaverde%20Bajo/Doina%20Olteanu/WhatsApp%20Image%202026-03-15%20at%2015.37.02.jpeg&x=1512&y=982&a=true',
-      'https://collacastellerademadrid.net/cloud/index.php/apps/files_sharing/publicpreview/X8TgtMGTWD3BxDn?fileId=69382&file=/2025/8.%20Joves%20de%20Valls%20(28.6.25)/I%C3%B1aki%20Grao/20250628-_6280516.jpg&x=1512&y=982&a=true',
-      '/img/gallery/Red_XES6264.jpg'
+      {
+        rank: '1',
+        img: '/img/gallery/IMG-20191013-WA0018.jpg',
+        texto: 'Image 1'
+      },
+      {
+        rank: '2',
+        img: '/img/gallery/Red_XES6190.jpg',
+        texto: 'Image 2'
+      },
+      {
+        rank: '3',
+        img: '/img/gallery/DSC_0288.JPG',
+        texto: 'Image 3'
+      },
+       {
+        rank: '4',
+        img: '/img/gallery/IMG-20191012-WA0032.jpg',
+        texto: 'Image 4'
+      },
+      {
+        rank: '5',
+        img: '/img/gallery/Red_XES6264.jpg',
+        texto: 'Image 5'
+      }
     ]
   });
 
-  const openModal = (imageSrc: string) => {
-    selectedImage.value = imageSrc;
+  /*
+   rank: string
+  img: string
+  texto: string
+  */
+
+  const selectedIndex = ref(-1);
+
+  const selectedImage = computed(() => {
+    const image = props.images[selectedIndex.value];
+    return image ? (image.full ?? image.img) : '';
+  });
+  const selectedAlt = computed(() => props.images[selectedIndex.value]?.texto || 'Selected image');
+  const hasMultiple = computed(() => props.images.length > 1);
+
+  const openModal = (index: number) => {
+    selectedIndex.value = index;
     modalOpen.value = true;
   };
 
   const closeModal = () => {
     modalOpen.value = false;
-    selectedImage.value = '';
+    selectedIndex.value = -1;
   };
+
+  const showNext = () => {
+    if (!hasMultiple.value) return;
+    selectedIndex.value = (selectedIndex.value + 1) % props.images.length;
+  };
+
+  const showPrev = () => {
+    if (!hasMultiple.value) return;
+    selectedIndex.value = (selectedIndex.value - 1 + props.images.length) % props.images.length;
+  };
+
+  // swipe / drag (touch and mouse): horizontal movement > 50px and dominant over vertical
+  let startX = 0;
+  let startY = 0;
+  let swiped = false;
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    swiped = false;
+  };
+
+  const onPointerUp = (e: PointerEvent) => {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+    swiped = true;
+    if (dx < 0) showNext(); else showPrev();
+  };
+
+  // a drag ends with a click on the image: swallow it so the modal doesn't close
+  const onClickCapture = (e: MouseEvent) => {
+    if (!swiped) return;
+    swiped = false;
+    e.stopPropagation();
+  };
+
+  const onKeydown = (e: KeyboardEvent) => {
+    if (!modalOpen.value) return;
+    if (e.key === 'ArrowRight') showNext();
+    else if (e.key === 'ArrowLeft') showPrev();
+    else if (e.key === 'Escape') closeModal();
+  };
+
+  onMounted(() => window.addEventListener('keydown', onKeydown));
+  onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 </script>
 

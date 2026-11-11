@@ -1,10 +1,11 @@
 <template>
-   <footer class="bg-black text-white pb-60 pt-12">
+   <footer class="bg-black text-white pb-60 pt-12 px-6 md:px-0">
     <div class="ccm_container grid md:grid-cols-3 gap-x-6 ">
 
       <div class="flex items-center gap-x-6">
+        <!-- v-gsap.whenVisible.fromTo="[{ scale: 0 }, { scale: 1 }]" -->
         <img 
-          v-gsap.whenVisible.fromTo="[{ scale: 0 }, { scale: 1 }]" src="/img/CCM_solo.png"
+          src="/img/CCM_solo.png"
           alt="Colla Castellera de Madrid logo"
           class=" mb-4 w-20 h-auto"
         />
@@ -16,9 +17,9 @@
           + 34 915 41 60 90
       </p>
 
-      <div>
-        <p class="text-sm text-right subpixel-antialiased opacity-70">síguenos en:</p>
-        <div class="flex gap-x-2 justify-end">
+      <div class="pt-6 md:pt-0">
+        <p class="text-sm md:text-right subpixel-antialiased opacity-70">síguenos en:</p>
+        <div class="flex gap-x-2 md:justify-end">
 
           <a v-for="rrss in RRSS" :key="rrss.name" :href="rrss.url" target="_blank" rel="noopener noreferrer">
             <Icon :name="rrss.icon" style="color: white" size="36"/>
@@ -57,7 +58,7 @@ import { icon } from '#build/ui/prose';
    
      { name: 'twitter',
       url: 'https://twitter.com/CCastelleraMAD',
-      icon: 'mdi:twitter',
+      icon: 'ion:logo-x',
     },
   ]
 
