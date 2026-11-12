@@ -79,6 +79,10 @@
         stroke="white"
         stroke-width="0.5"
         stroke-opacity="0.25"
+        :opacity="highlighted && highlighted !== layer.key ? 0 : 1"
+        class="transition-opacity duration-200 cursor-pointer"
+        @mouseenter="emit('hover', layer.key)"
+        @mouseleave="emit('hover', null)"
       />
 
       <!-- thin link connecting each event's band position (above) to its true time position (below) -->
@@ -90,6 +94,7 @@
         stroke="#999"
         stroke-width="1"
         opacity="0.5"
+        pointer-events="none"
       />
 
       <!-- time scale ticks for each month -->
@@ -102,7 +107,7 @@
         :y2="height"
         stroke="#ccc"
         stroke-width="1"
-       
+        pointer-events="none"
       />
 
       <!-- small dots at each event's band position, right at the curve's zero baseline -->
@@ -113,6 +118,7 @@
         cy="2"
         r="1.5"
         :fill="d.hasScore && d.active ? '#333' : '#ccc'"
+        pointer-events="none"
       />
 
       <circle
@@ -122,6 +128,7 @@
         :cy="yScale(0)"
         r="1.5"
         :fill="d.hasScore && d.active ? '#333' : '#ccc'"
+        pointer-events="none"
       />
 
       <!-- events dots, one per actuación, at their true time-scale location in the reserved bottom strip -->
@@ -163,6 +170,12 @@
     maxValue: number
     // optional score drawn as a light gray horizontal reference line
     referenceValue?: number
+    // castell/pilar currently hovered (shared across instances); other colored layers fade out
+    highlighted?: string | null
+  }>()
+
+  const emit = defineEmits<{
+    hover: [nombre: string | null]
   }>()
 
   // fixed strip at the bottom of the svg reserved for the per-actuación reference dots,

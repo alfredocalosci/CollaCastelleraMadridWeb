@@ -43,6 +43,8 @@
                 :year="yyyy"
                 :max-value="maxResultadoValue"
                 :reference-value="REFERENCE_VALUE"
+                :highlighted="hoveredCastell"
+                @hover="hoveredCastell = $event"
               />
 
              
@@ -93,18 +95,20 @@
           <button
             class="relative flex flex-col w-full cursor-pointer group transition-opacity"
             @click="toggleCastell(c.nombre)"
+            @mouseenter="hoveredCastell = c.nombre"
+            @mouseleave="hoveredCastell = null"
           >
             <!-- filtered background layer (grayscale applies here, not to the bars) -->
             <div
-              class="absolute inset-0"
-              :class="selectedCastells.length > 0 && !selectedCastells.includes(c.nombre) ? 'grayscale-100 brightness-180' : 'grayscale-0 brightness-100'"
+              class="absolute inset-0 transition-[filter] duration-200"
+              :class="isDimmed(c.nombre) ? 'grayscale-100 brightness-180' : 'grayscale-0 brightness-100'"
               :style="{ backgroundColor: colorHex(c.score) }"
             ></div>
 
             <!-- castell header -->
             <div
-              class="relative flex items-center justify-between py-1 px-2 font-display"
-              :class="selectedCastells.length > 0 && !selectedCastells.includes(c.nombre) ? 'grayscale-100 brightness-180' : 'grayscale-0 brightness-100'"
+              class="relative flex items-center justify-between py-1 px-2 font-display transition-[filter] duration-200"
+              :class="isDimmed(c.nombre) ? 'grayscale-100 brightness-180' : 'grayscale-0 brightness-100'"
             >
               <span class="text-base font-semibold text-white">{{ c.nombre }}</span>
               <span class="text-xs font-semibold text-emerald-100">
@@ -119,10 +123,10 @@
             <!-- value line -->
             <div
               class="absolute inset-y-0 left-0"
-              :class="selectedCastells.length > 0 && !selectedCastells.includes(c.nombre) ? 'bg-gray-400' : ''"
+              :class="isDimmed(c.nombre) ? 'bg-gray-400' : ''"
               :style="{
                 width: (c.count / maxCount * 100) + '%',
-                ...(selectedCastells.length > 0 && !selectedCastells.includes(c.nombre) ? {} : { backgroundColor: colorHex(c.score) })
+                ...(isDimmed(c.nombre) ? {} : { backgroundColor: colorHex(c.score) })
               }"
             ></div>
             <!-- selected (filtered) line -->
@@ -175,7 +179,7 @@
         <EventDensity
           class="w-full h-16 mb-1"
           :actuaciones="actuaciones"
-          :filtered-ids="filteredIds"
+          :filtered-ids="densityFilteredIds"
           :first-year="allYears[0]!"
           :year-count="allYears.length"
           :range="sliderValue"
@@ -524,6 +528,17 @@
   const selectedCastells = ref<string[]>([])
   const diadaDe6 = ref(false)
 
+  // castell/pilar hovered in the streamgraphs or on its button; temporarily overrides
+  // the selection look of the buttons and fades the other colored layers in the streamgraphs
+  const hoveredCastell = ref<string | null>(null)
+
+  // a button renders "not selected" (grayscale) when another castell is hovered,
+  // or, with nothing hovered, when a selection exists and it isn't part of it
+  function isDimmed(nombre: string) {
+    if (hoveredCastell.value) return nombre !== hoveredCastell.value
+    return selectedCastells.value.length > 0 && !selectedCastells.value.includes(nombre)
+  }
+
   // past actuaciones reaching the reference value, regardless of the other filters
   const diadaDe6Count = computed(() => actuacionesAllData.value.filter(a => a.resultadoValue >= REFERENCE_VALUE).length)
 
@@ -542,6 +557,16 @@
   })
 
   const filteredIds = computed(() => new Set(actuacionesFilteredData.value.map(a => a.id)))
+
+  // EventDensity ids: while a castell is hovered, narrow the current filter to the actuaciones
+  // that include it (a preview of what clicking its button would filter)
+  const densityFilteredIds = computed(() => {
+    const hovered = hoveredCastell.value
+    if (!hovered) return filteredIds.value
+    return new Set(actuacionesFilteredData.value
+      .filter(a => a.castellsYPilars.includes(hovered))
+      .map(a => a.id))
+  })
 
   const filtersActive = computed(() =>
     selectedCastells.value.length > 0
@@ -589,7 +614,6 @@
     return Math.max(...castellsWithScores.value.map(c => c.count))
   })
 
- 
 </script>
 
 <style>
