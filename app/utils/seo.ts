@@ -11,7 +11,7 @@ export const siteSeo = {
   lang: 'es',
   description:
     'La Colla Castellera de Madrid levanta castells, tradición catalana declarada Patrimonio Inmaterial de la Humanidad por la UNESCO. Fuerza, equilibrio, valor y seny.',
-  image: '/img/covers/DSC_0163.JPG',
+  image: '/img/OG/og_CCM_home.png',
 }
 
 export interface PageSeo {
@@ -48,7 +48,7 @@ export const pageSeo = {
   unpismes: {
     title: 'Un pis més',
     description:
-      'Un pis més: estadísticas de la Colla Castellera de Madrid. Castells cargados y descargados por temporada y evolución de la colla.',
+      'estadísticas de la Colla Castellera de Madrid. Castells cargados y descargados por temporada y evolución de la colla.',
   },
   archivo: {
     title: 'Archivo',

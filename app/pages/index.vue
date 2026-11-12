@@ -63,6 +63,10 @@
       <p>Para mas información contáctanos <a href="mailto:info@collacastellerademadrid.net" class="text-black underline underline-offset-3 decoration-rosso-500">info@collacastellerademadrid.net</a></p>
 
       <!-- coordinadora internacional -->
+      <p class="text-sm mt-12">Somos miembros de: </p>
+      <a href="https://collesinternacionals.org/" target="_blank" rel="noopener noreferrer">
+        <img src="~/assets/img/fcci_logo-full.svg" alt="Federació de Colles Catellers Internacional" class="h-12 mb-4"/>
+      </a>
 
     </div>
    
