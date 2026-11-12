@@ -86,12 +86,10 @@
     })
   })
     
-
-
   onMounted(() => {
     // console.log('calendarioByTipo:', calendarioByTipo.value)
     // console.log('calendarAttributes:', calendarAttributes.value)
-    console.log('thisMonthEvents:', thisMonthEvents.value)
+    // console.log('thisMonthEvents:', thisMonthEvents.value)
   })
 
 </script>

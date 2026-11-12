@@ -50,8 +50,8 @@
 <template>
     <div>
         <div class="bg-white">
-            <section class="ccm_container pt-24 pb-12">
-                 <article class="grid grid-cols-1 md:grid-cols-3 ">
+            <section class="ccm_container pt-24 pb-12 ">
+                 <article class="grid grid-cols-1 md:grid-cols-3 px-6 md:px-0">
                     <h1 class=" text-xl/6 uppercase font-display font-bold pb-4 mt-3 tracking-tight">Actuaciones <span class="text-rosso-500 text-3xl/6">.</span></h1>
 
                     <p class="mt-3 uppercase text-sm pt-1 md:col-span-2 text-gray-500">en programación:</p>
@@ -88,8 +88,8 @@
         <section class="py-12 ">
 
             <template v-for="group in pastActuacionesByYear" :key="group.year">
-                <article class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr] gap-x-8 px-6">
-                    <h6 class="md:col-start-2 text-gray-600 text-sm mt-8 mb-2  ">{{ group.year }}</h6>
+                <article class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr] gap-x-8 ">
+                    <h6 class="md:col-start-2 text-gray-600 text-sm mt-8 mb-2 px-6 md:px-0 ">{{ group.year }}</h6>
                 </article>
 
                 <template v-for="act in group.items" :key="act.id">
@@ -128,6 +128,8 @@
                                 name="mdi:chevron-down"
                                 class="size-6 text-gray-500 group-hover:text-rosso-500 -order-1 md:order-0 transition-all duration-300"
                             />
+
+                            <div v-else class="w-6 h-6"></div>
                         </button>
     
                         <CustomAccordion v-if="hasImages(act.id)" :id="`gallery-${act.id}`" :open="isOpen(act.id)" class="w-full">

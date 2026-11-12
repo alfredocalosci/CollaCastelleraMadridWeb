@@ -61,6 +61,9 @@
       <hr class="border-gray-200 my-6"/>
 
       <p>Para mas información contáctanos <a href="mailto:info@collacastellerademadrid.net" class="text-black underline underline-offset-3 decoration-rosso-500">info@collacastellerademadrid.net</a></p>
+
+      <!-- coordinadora internacional -->
+
     </div>
    
     <div class="hidden md:flex justify-end items-center md:col-start-4">
@@ -70,12 +73,12 @@
   </section>
 
   <!-- image grid -->
-  <section class="w-9/12 mx-auto py-24 ">
-    <image-grid :images="galeria ?? undefined" />
+  <section class="w-full  bg-black py-1">
+    <image-grid-full :images="galeria ?? undefined" />
   </section>
 
   <!-- gatos de madrid -->
-  <section class=" bg-gray-200 py-12 px-6">
+  <section class=" bg-gray-200 pb-12 pt-24 px-6">
 
     <article class="ccm_container">
       <div class="grid md:grid-cols-3 gap-x-12 mx-8">
@@ -93,7 +96,7 @@
               icon="mdi:arrow-top-right-thick"
               :ui="{ base: 'rounded-none' }"
               size="xl"
-              class="bg-rosso-500 hover:bg-black transition-colors duration-300 text-white  shadow-lg w-full uppercase font-display cursor-pointer "
+              class="bg-rosso-500 hover:bg-black transition-colors duration-300 text-white  shadow-lg w-full uppercase font-display cursor-pointer mb-12 md:mb-0"
             >APÚNTATE EN PINYATOR</UButton>
         </div>
 

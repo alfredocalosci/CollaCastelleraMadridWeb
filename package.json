@@ -23,5 +23,8 @@
     "@types/d3": "^7.4.3",
     "@types/node": "^26.2.0",
     "@yuta-inoue-ph/nuxt-vcalendar": "^1.1.4"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.8.0": true
   }
 }
