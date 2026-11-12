@@ -1,7 +1,8 @@
 <template>
-  <div ref="containerRef" class="w-full h-full">
+  <div ref="containerRef" class="relative w-full h-full min-w-0 overflow-hidden">
     <svg
       v-if="width > 0 && height > 0"
+      class="absolute inset-0 block"
       :width="width"
       :height="height"
       :viewBox="`0 0 ${width} ${height}`"
@@ -105,7 +106,7 @@
       />
 
       <!-- small dots at each event's band position, right at the curve's zero baseline -->
-        <circle
+      <circle
         v-for="d in eventDots"
         :key="`band-${d.key}`"
         :cx="d.bandX"
@@ -116,7 +117,7 @@
 
       <circle
         v-for="d in eventDots"
-        :key="`band-${d.key}`"
+        :key="`band-base-${d.key}`"
         :cx="d.bandX"
         :cy="yScale(0)"
         r="1.5"

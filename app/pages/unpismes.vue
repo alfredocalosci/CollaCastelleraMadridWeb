@@ -3,7 +3,7 @@
 
     <section class="ccm_container pt-12 pb-6"> 
       <article class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="order-last md:order-first">
+        <div class="order-last md:order-first px-6 md:px-0">
 
           <h1 class="text-xl/6 uppercase font-display font-bold mt-3 tracking-tight">Un pis més <span class="text-rosso-500 text-3xl/6">.</span></h1>
           
@@ -15,7 +15,7 @@
 
     <section class="w-11/12 mx-auto ">
       
-       <article class="w-full flex items-stretch gap-2 mb-3">
+      <article class="w-full flex items-stretch gap-2 mb-3">
 
         <button
           type="button"
@@ -30,7 +30,7 @@
         <div class="flex-1 flex gap-6">
           <div
             v-for="yyyy in visibleYears" :key="yyyy"
-            class="flex-1 flex flex-col  bg-white text-xs font-display font-bold w-full  aspect-4/3 border-t border-gray-300 py-2"
+            class="flex-1 min-w-0 flex flex-col  bg-white text-xs font-display font-bold w-full  aspect-4/3 border-t border-gray-300 py-2"
           >
            
           <span class="pl-1 pb-2"> {{ yyyy }}</span>
@@ -170,7 +170,7 @@
 
       </article>
 
-      <div v-if="allYears.length" class="mt-12 ">
+      <div v-if="allYears.length" class="mt-12 mx-6 md:mx-0">
         
         <EventDensity
           class="w-full h-16 mb-1"
@@ -210,16 +210,17 @@
      
     </section>
 
-    <section class="ccm_container mt-12 pb-12">
+    <section class="ccm_container mt-12 pb-12 ">
       <template v-for="group in actuacionesAllDataByYear" :key="group.year">
-        <article class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr_auto] gap-x-8">
+
+        <article class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr_auto] gap-x-8 px-6 md:px-0">
           <h6 class="md:col-start-2 text-gray-600 text-sm mt-8 mb-2">{{ group.year }}</h6>
         </article>
 
         <div
           v-for="actuacion in group.items"
           :key="actuacion.id"
-          class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr_auto] items-start gap-x-8 py-3 border-t border-gray-300"
+          class="grid grid-cols-1 md:grid-cols-[2fr_3fr_3fr_auto] items-start gap-x-8 py-3 border-t border-gray-300 px-6 md:px-0"
         >
           <h6 class="text-xs/5 text-right mb-0 ">{{ formatDate(actuacion.fecha) }}</h6>
 
@@ -368,34 +369,44 @@
   })
 
   // sliding 3-year window over allYears, defaulting to the last 3
-  const VISIBLE_YEARS_COUNT = 3
+  // 3 years on desktop (md and up), 1 year on small screens
+  const visibleCount = ref(3)
   const windowStartIndex = ref(0)
 
-  watch(allYears, (years) => {
-    windowStartIndex.value = Math.max(0, years.length - VISIBLE_YEARS_COUNT)
+  onMounted(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const update = () => { visibleCount.value = mq.matches ? 3 : 1 }
+    update()
+    mq.addEventListener('change', update)
+    onBeforeUnmount(() => mq.removeEventListener('change', update))
+  })
+
+  // default to the most recent years; also re-anchor when the window size changes
+  watch([allYears, visibleCount], ([years, count]) => {
+    windowStartIndex.value = Math.max(0, years.length - count)
   }, { immediate: true })
 
   const visibleYears = computed(() =>
-    allYears.value.slice(windowStartIndex.value, windowStartIndex.value + VISIBLE_YEARS_COUNT)
+    allYears.value.slice(windowStartIndex.value, windowStartIndex.value + visibleCount.value)
   )
 
   const canGoPrev = computed(() => windowStartIndex.value > 0)
-  const canGoNext = computed(() => windowStartIndex.value + VISIBLE_YEARS_COUNT < allYears.value.length)
+  const canGoNext = computed(() => windowStartIndex.value + visibleCount.value < allYears.value.length)
 
   function goPrev() {
     windowStartIndex.value = Math.max(0, windowStartIndex.value - 1)
   }
 
   function goNext() {
-    windowStartIndex.value = Math.min(allYears.value.length - VISIBLE_YEARS_COUNT, windowStartIndex.value + 1)
+    windowStartIndex.value = Math.min(allYears.value.length - visibleCount.value, windowStartIndex.value + 1)
   }
 
   // centers the visible window on the given year, clamped to the available range
   function goToYear(yyyy: number) {
     const index = allYears.value.indexOf(yyyy)
     if (index === -1) return
-    const half = Math.floor(VISIBLE_YEARS_COUNT / 2)
-    const maxStart = Math.max(0, allYears.value.length - VISIBLE_YEARS_COUNT)
+    const half = Math.floor(visibleCount.value / 2)
+    const maxStart = Math.max(0, allYears.value.length - visibleCount.value)
     windowStartIndex.value = Math.min(maxStart, Math.max(0, index - half))
   }
 
