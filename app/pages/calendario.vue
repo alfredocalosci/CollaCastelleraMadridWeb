@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  usePageSeo('calendario')
   // import { popover } from '#build/ui';
 
   const { data: calendario } = await useFetch<CalendarEvent[]>('/api/calendario')

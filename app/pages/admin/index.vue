@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  usePageSeo('admin')
   interface SourceStatus {
     key: string
     label: string

@@ -17,6 +17,7 @@
 </template>
 
 <script lang="ts" setup>
+  usePageSeo('apiTest')
   const knownTabs = ['WEB_HOME_CAROUSEL', 'WEB_HOME_GALLERY' ,'WEB_CALENDARIO', 'DAT_ACTUACIONES']
   const testTab = ref('')
   const testData = ref<string | null>(null)

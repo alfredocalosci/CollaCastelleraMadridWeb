@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  usePageSeo('actuaciones')
     const { data } = await useFetch<{ actuaciones: Actuacion[], castells_list: Castell[], images: Record<string, GalleryImage[]> }>('/api/actuaciones')
 
     const actuaciones = computed(() => data.value?.actuaciones ?? [])

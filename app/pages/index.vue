@@ -138,6 +138,7 @@
 </template>
 
 <script lang="ts" setup>
+  usePageSeo('home')
 
   const { data: portadaData } = await useFetch<CarouselSlide[]>('/api/portada')
   const portada = portadaData

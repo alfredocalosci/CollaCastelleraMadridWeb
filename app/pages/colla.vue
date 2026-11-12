@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  usePageSeo('colla')
 
 </script>
 

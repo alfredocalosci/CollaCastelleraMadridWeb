@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts" setup>
+  usePageSeo('archivo')
 
 </script>
 

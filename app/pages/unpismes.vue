@@ -279,6 +279,8 @@
 <script lang="ts" setup>
   import { scaleSequential, interpolateRgb } from 'd3'
 
+  usePageSeo('unpismes')
+
   // minimum reference performance: 3 castells of 6 stages (3d6, 4d6...) plus a pd4
   const REFERENCE_VALUE = 470
 
