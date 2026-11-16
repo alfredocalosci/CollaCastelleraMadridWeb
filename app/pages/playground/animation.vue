@@ -1,44 +1,50 @@
 <template>
-  <div>
-    <section
-      ref="sectionEl"
-      class="relative h-screen flex items-center justify-center bg-gray-300"
+  <div class="w-full">
+    <!-- Tall track: the sticky section stays in view while the track scrolls past (pure CSS pinning) -->
+    <div
+      ref="trackEl"
+      :style="{ height: `calc(100vh + ${SCROLL_PER_STEP * steps.length}px)` }"
     >
-      <div class="relative w-full lg:w-240 aspect-video border border-dashed text-gray-500 border-white">
-        <svg
-          class="absolute inset-0 w-full h-full"
-          width="1280"
-          height="720"
-          viewBox="0 0 1280 720"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            v-for="(c, i) in steps[0]!.circles"
+      <section
+        ref="sectionEl"
+        class="sticky top-0 h-screen flex items-center justify-center bg-gray-300"
+      >
+        <div class="relative w-full max-w-240 aspect-video border border-dashed text-gray-500 border-white">
+          <svg
+            class="absolute inset-0 w-full h-full"
+            width="1280"
+            height="720"
+            viewBox="0 0 1280 720"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              v-for="(c, i) in steps[0]!.circles"
+              :key="i"
+              :ref="(el) => (circleEls[i] = el as SVGCircleElement)"
+              :cx="c.cx"
+              :cy="c.cy"
+              :r="c.r"
+              :fill="c.fill"
+            />
+          </svg>
+          <p class="relative p-6">
+            Animation Playground
+          </p>
+        </div>
+        <nav class="absolute bottom-8 inset-x-0 flex justify-center gap-3">
+          <button
+            v-for="(step, i) in steps"
             :key="i"
-            :ref="(el) => (circleEls[i] = el as SVGCircleElement)"
-            :cx="c.cx"
-            :cy="c.cy"
-            :r="c.r"
-            :fill="c.fill"
+            type="button"
+            :aria-label="`Go to step ${i + 1}`"
+            :aria-current="i === activeStep"
+            class="w-6 h-6 rounded-full bg-white cursor-pointer border-2 box-border"
+            :class="i === activeStep ? 'border-gray-900' : 'border-transparent'"
+            @click="goToStep(i)"
           />
-        </svg>
-        <p class="relative p-6">
-          Animation Playground
-        </p>
-      </div>
-      <nav class="absolute bottom-8 inset-x-0 flex justify-center gap-3">
-        <button
-          v-for="(step, i) in steps"
-          :key="i"
-          type="button"
-          :aria-label="`Go to step ${i + 1}`"
-          :aria-current="i === activeStep"
-          class="w-6 h-6 rounded-full bg-white cursor-pointer border-2 box-border"
-          :class="i === activeStep ? 'border-gray-900' : 'border-transparent'"
-          @click="goToStep(i)"
-        />
-      </nav>
-    </section>
+        </nav>
+      </section>
+    </div>
 
     <article class="p-6 min-h-screen">
       <p>article text</p>
@@ -159,6 +165,7 @@ const steps: AnimationStep[] = [
   },
 ]
 
+const trackEl = ref<HTMLElement | null>(null)
 const sectionEl = ref<HTMLElement | null>(null)
 const circleEls = ref<SVGCircleElement[]>([])
 const activeStep = ref(0)
@@ -169,6 +176,8 @@ let tl: gsap.core.Timeline | undefined
 
 onMounted(() => {
   gsap.registerPlugin(ScrollTrigger)
+  // Ignore the mobile URL-bar show/hide resizes, which otherwise trigger a pin refresh mid-scroll
+  ScrollTrigger.config({ ignoreMobileResize: true })
 
   ctx = gsap.context(() => {
     // Paused timeline: one segment (1 unit) per step transition, with a label per step
@@ -211,13 +220,11 @@ onMounted(() => {
       tl!.addLabel(`step${i}`, i)
     })
 
-    // Scroll only pins the section and fires thresholds; it does not drive the animation
+    // Pinning is done by CSS sticky; the trigger only tracks scroll through the track and fires thresholds
     trigger = ScrollTrigger.create({
-      trigger: sectionEl.value,
+      trigger: trackEl.value,
       start: 'top top',
-      end: `+=${SCROLL_PER_STEP * steps.length}`,
-      pin: true,
-      anticipatePin: 1,
+      end: 'bottom bottom',
       onUpdate: (self) => {
         const scrolled = self.scroll() - self.start
         const target = Math.max(0, Math.min(steps.length - 1, Math.floor(scrolled / SCROLL_PER_STEP)))
