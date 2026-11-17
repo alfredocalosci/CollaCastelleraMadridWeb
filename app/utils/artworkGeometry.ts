@@ -4,7 +4,7 @@ export interface ArtLeaf {
   id: string
   d: string
   fill?: string
-  fillRule?: string
+  fillRule?: 'nonzero' | 'evenodd' | 'inherit'
 }
 
 export interface ArtNode {

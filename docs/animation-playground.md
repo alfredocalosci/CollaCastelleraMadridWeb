@@ -170,8 +170,23 @@ before the next transition starts; otherwise two blocks are visible at once or t
 ## Navigation
 
 - **Scroll**: crossing a threshold calls `playToStep(target)`; duration is `|steps crossed| * DURATION`.
-- **Dots**: `goToStep(i)` repositions the scroll instantly (`behavior: 'instant'`) and plays the timeline to the target.
-  Intermediate steps are crossed quickly, not skipped. While the jump runs, the scroll handler is ignored (`jumping`).
+- **Dots, neighbouring frame**: the scroll is repositioned instantly (`behavior: 'instant'`) and the scroll timeline
+  plays to the target, i.e. the tuned transition between the two frames.
+- **Dots, any other frame**: a **direct jump** (`directJump`): everything goes straight from where it is to the target
+  frame, never showing the frames in between (0 -> 3 does not pass the stars or the flash; a star that is still a star
+  morphs straight into the "1"). It takes `JUMP_DURATION` seconds.
+  - It reuses the same builders as the scroll timeline (`buildBackground/Circles/Text`, `buildArtworkSegment`), called
+    for frames `from -> to` instead of `i-1 -> i`, with `.to()` tweens that start from the live state. So it is also
+    right when a transition was interrupted halfway: in direct mode every element is tweened to its target state, and
+    every text block except the target leaves.
+  - Artwork uses `ART_DEFAULTS` plus `ART_JUMP` (empty by default; same format as `ART_TRANSITIONS`, times relative to
+    the whole jump), not the per-transition settings, because those are written for one specific step.
+  - When it ends the scroll timeline is seeked to the target step (silent, everything is already there).
+  - A click while a jump is running starts a new jump from the current state (also when it is a neighbouring frame:
+    the scroll timeline is not in sync with the screen until the jump ends).
+- **Warm-up**: after building the scroll timeline it is rendered forward and back once. Every tween records its start
+  value in the right order, which is what makes seeking (after a jump) and reversing safe.
+- While a jump runs, the scroll handler is ignored (`jumping`).
 
 ## Tuning
 
@@ -179,6 +194,7 @@ before the next transition starts; otherwise two blocks are visible at once or t
 | --- | --- | --- |
 | `SCROLL_PER_STEP` | `animationSteps.ts` | px of scroll between two step thresholds |
 | `DURATION` | `animationSteps.ts` | seconds one step-to-step transition takes |
+| `JUMP_DURATION` | `animationSteps.ts` | seconds a direct dot jump takes |
 | `EASES` / `ease` per circle | `animationSteps.ts` | ease name -> GSAP ease |
 | `TEXT_OUT`, `TEXT_IN` | `useScrollScene.ts` | text phase timing, see above |
 | `MAX_CIRCLES` | `animationSteps.ts` | number of SVG circles (must be >= the largest frame) |

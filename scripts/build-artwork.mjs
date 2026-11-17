@@ -37,7 +37,11 @@ function leavesOf(node, inheritedFill, out = []) {
   if (node.tag === 'path') {
     const leaf = { id: node.attrs.id, d: node.attrs.d }
     if (fill && fill !== 'none') leaf.fill = fill
-    if (node.attrs['fill-rule']) leaf.fillRule = node.attrs['fill-rule']
+    const rule = node.attrs['fill-rule']
+    if (rule) {
+      if (!['nonzero', 'evenodd', 'inherit'].includes(rule)) console.warn(`  ! unsupported fill-rule "${rule}" ignored`)
+      else leaf.fillRule = rule
+    }
     out.push(leaf)
   }
   else if (node.tag === 'g') {
@@ -116,7 +120,7 @@ export interface ArtLeaf {
   id: string
   d: string
   fill?: string
-  fillRule?: string
+  fillRule?: 'nonzero' | 'evenodd' | 'inherit'
 }
 
 export interface ArtNode {

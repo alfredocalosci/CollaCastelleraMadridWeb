@@ -13,6 +13,7 @@ export const EASES: Record<EaseName, string> = {
 // Scroll tuning
 export const SCROLL_PER_STEP = 300 // px of scrolling between two step thresholds
 export const DURATION = 1 // seconds a single step-to-step transition takes (time based, not tied to scroll)
+export const JUMP_DURATION = 1.2 // seconds a direct jump (dot click between non-neighbouring frames) takes
 
 // ---------------------------------------------------------------------------
 // Circles: ordered list, index = z-order (back to front), matched by index between steps

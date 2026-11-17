@@ -69,6 +69,11 @@ export const ART_TRANSITIONS: Record<number, Fx[]> = {
   ],
 }
 
+// Direct jump (dot click between frames that are not neighbours): the scene goes straight from where it is to the
+// target frame, without passing the frames in between. Uses ART_DEFAULTS; add entries here (same format as above,
+// times relative to the whole jump) to give jumps their own look, e.g. an 'exit' for the pilar.
+export const ART_JUMP: Fx[] = []
+
 // ---------------------------------------------------------------------------
 // Structure settings
 // ---------------------------------------------------------------------------

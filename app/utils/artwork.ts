@@ -19,7 +19,7 @@ export interface ArtTarget {
   item: string
   tag: 'g' | 'path'
   d?: string // path: drawing at the reference frame
-  fillRule?: string
+  fillRule?: ArtLeaf['fillRule']
   leaves?: ArtLeaf[] // group: its paths at the reference frame
   states: ArtState[] // one per frame
 }
