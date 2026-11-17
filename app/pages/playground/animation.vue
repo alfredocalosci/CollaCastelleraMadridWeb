@@ -7,7 +7,7 @@
     >
       <section
         ref="sectionEl"
-        class="sticky top-0 h-screen flex items-center justify-center bg-gray-300"
+        class="sticky top-0 h-screen flex items-center justify-center bg-black"
       >
         <div class="relative w-full max-w-240 aspect-video border border-dashed text-gray-500 border-white">
           <svg
@@ -83,86 +83,52 @@ const EASES: Record<EaseName, string> = {
 const SCROLL_PER_STEP = 300 // px of scrolling between two step thresholds
 const DURATION = 1 // seconds a single step-to-step transition takes (time based, not tied to scroll)
 
-// Grid: every position and radius is a multiple of 16 (viewBox 1280 x 720 = 80 x 45 cells)
-const g = (n: number) => n * 16
-
-// Shared palette for circle fills and background transitions
-const palette = {
-  gray: '#d1d5dc', // tailwind gray-300 (initial bg)
-  white: '#ffffff',
-  orange: '#f97316',
-  teal: '#14b8a6',
-  indigo: '#6366f1',
-  pink: '#ec4899',
-  yellow: '#facc15',
-  slate: '#1e293b',
-  sky: '#38bdf8',
-  green: '#22c55e',
-} as const
-
+// Source of truth: docs/animationFrames/f0..f4.svg (viewBox 1280 x 720)
+const MAX_CIRCLES = 5
 const E: EaseName = 'ease-in-out'
 const c = (cx: number, cy: number, r: number, fill: string, ease: EaseName = E): CircleShape => ({
-  cx: g(cx), cy: g(cy), r: g(r), fill, ease,
+  cx, cy, r, fill, ease,
 })
 
-// Animation table: steps[step].circles[circle]
-// Center of the grid: x = 40 (640px), y = 22 (352px)
+// Frames with fewer than MAX_CIRCLES get "extra" circles at the back (start of the list),
+// cloned from the backmost real circle, so they are invisible but keep a start/end point for every step
+const frame = (bg: string, ...shapes: CircleShape[]): AnimationStep => {
+  const extras = Array.from({ length: MAX_CIRCLES - shapes.length }, () => ({ ...shapes[0]! }))
+  return { bg, circles: [...extras, ...shapes] }
+}
+
+// Animation table: steps[step].circles[circle] (circle index = z-order, back to front)
 const steps: AnimationStep[] = [
-  {
-    // Step 1: five overlapped white circles at the center
-    bg: palette.gray,
-    circles: [
-      c(40, 22, 4, palette.white),
-      c(40, 22, 4, palette.white),
-      c(40, 22, 4, palette.white),
-      c(40, 22, 4, palette.white),
-      c(40, 22, 4, palette.white),
-    ],
-  },
-  {
-    // Step 2: horizontal row
-    bg: palette.slate,
-    circles: [
-      c(20, 22, 4, palette.orange, 'back-in-out'),
-      c(30, 22, 4, palette.yellow, 'back-in-out'),
-      c(40, 22, 4, palette.green, 'back-in-out'),
-      c(50, 22, 4, palette.sky, 'back-in-out'),
-      c(60, 22, 4, palette.pink, 'back-in-out'),
-    ],
-  },
-  {
-    // Step 3: diagonal
-    bg: palette.teal,
-    circles: [
-      c(20, 10, 3, palette.white),
-      c(30, 16, 3, palette.yellow),
-      c(40, 22, 3, palette.orange),
-      c(50, 28, 3, palette.slate),
-      c(60, 34, 3, palette.indigo),
-    ],
-  },
-  {
-    // Step 4: pentagon
-    bg: palette.indigo,
-    circles: [
-      c(40, 10, 3, palette.white),
-      c(52, 18, 3, palette.pink),
-      c(48, 32, 3, palette.yellow),
-      c(32, 32, 3, palette.sky),
-      c(28, 18, 3, palette.green),
-    ],
-  },
-  {
-    // Step 5: concentric
-    bg: palette.pink,
-    circles: [
-      c(40, 22, 12, palette.slate),
-      c(40, 22, 10, palette.indigo),
-      c(40, 22, 8, palette.sky),
-      c(40, 22, 6, palette.yellow),
-      c(40, 22, 4, palette.white),
-    ],
-  },
+  // f0
+  frame('#000000',
+    c(320, 486, 180, '#000000'),
+    c(319.239, 486, 141.225, '#DF1A22'),
+  ),
+  // f1
+  frame('#E01A22',
+    c(960, 360, 1194.5, '#E01A22'),
+    c(960, 360, 636, '#F4A4A7'),
+    c(960, 360, 565.5, '#EF767B'),
+    c(960, 360, 495, '#EA484F'), // 565.5 - 70.5
+    c(960, 360, 424.5, '#E01A22'), // 495 - 70.5
+  ),
+  // f2
+  frame('#BBB4AF',
+    c(704.366, 410.468, 54.2667, '#F9D80F'),
+    c(925.467, 642.933, 310.933, '#137534'),
+    c(671, 824.801, 418, '#11A242'),
+    c(1108.8, 832.134, 310.2, '#17D758'),
+  ),
+  // f3
+  frame('#F9D80F',
+    c(960, 500, 320, '#FFFFFF'),
+    c(960, 500, 253, '#F9D80F'),
+  ),
+  // f4
+  frame('#118BA1',
+    c(1004.5, 441.5, 209.5, '#FFFFFF'),
+    c(1004.5, 441.5, 53.5, '#118BA1'),
+  ),
 ]
 
 const trackEl = ref<HTMLElement | null>(null)
@@ -173,6 +139,7 @@ const activeStep = ref(0)
 let ctx: gsap.Context | undefined
 let trigger: ScrollTrigger | undefined
 let tl: gsap.core.Timeline | undefined
+let jump: gsap.core.Timeline | undefined // running button jump, if any
 
 onMounted(() => {
   gsap.registerPlugin(ScrollTrigger)
@@ -207,12 +174,17 @@ onMounted(() => {
         },
         at,
       )
+      // Explicit from/to values (never read from live state), so the segment is correct
+      // even when the timeline is seeked after a button jump
       step.circles.forEach((shape, ci) => {
-        tl!.to(
+        const prev = steps[i - 1]!.circles[ci]!
+        tl!.fromTo(
           circleEls.value[ci]!,
+          { attr: { cx: prev.cx, cy: prev.cy, r: prev.r, fill: prev.fill } },
           {
             attr: { cx: shape.cx, cy: shape.cy, r: shape.r, fill: shape.fill },
             ease: EASES[shape.ease],
+            immediateRender: false,
           },
           at,
         )
@@ -228,6 +200,7 @@ onMounted(() => {
       onUpdate: (self) => {
         const scrolled = self.scroll() - self.start
         const target = Math.max(0, Math.min(steps.length - 1, Math.floor(scrolled / SCROLL_PER_STEP)))
+        if (jump) return // a button jump is running: scroll is only being repositioned
         if (target !== activeStep.value) playToStep(target)
       },
     })
@@ -244,11 +217,46 @@ function playToStep(index: number) {
   tl.tweenTo(`step${index}`, { duration: distance * DURATION, ease: 'none', overwrite: true })
 }
 
-// Dots scroll just past the threshold of the given step
+// Dots: direct keyframe-to-keyframe transition, skipping intermediate steps.
+// 1. scroll is repositioned instantly (the scroll handler ignores it while the jump runs)
+// 2. a one-off tween goes from the live state straight to the target step
+// 3. when done, the (paused) scroll timeline is seeked to the target so scrolling continues seamlessly
 function goToStep(index: number) {
-  if (!trigger) return
-  const top = trigger.start + index * SCROLL_PER_STEP + 1
-  window.scrollTo({ top, behavior: 'smooth' })
+  if (!tl || !trigger || index === activeStep.value) return
+
+  gsap.killTweensOf(tl) // stop any running scroll-driven tween
+  jump?.kill() // a click during a jump restarts from the live state
+
+  const target = steps[index]!
+  const fromBg = sectionEl.value?.style.backgroundColor || steps[activeStep.value]!.bg
+  activeStep.value = index
+
+  window.scrollTo({ top: trigger.start + index * SCROLL_PER_STEP + 1, behavior: 'instant' })
+
+  const progress = { p: 0 }
+  jump = gsap.timeline({
+    defaults: { duration: DURATION },
+    onComplete: () => {
+      tl!.seek(`step${index}`) // events suppressed: state already matches
+      jump = undefined
+    },
+  })
+  jump.to(progress, {
+    p: 1,
+    ease: 'sine.inOut',
+    onUpdate: () => {
+      if (sectionEl.value) {
+        sectionEl.value.style.backgroundColor
+          = `color-mix(in oklch, ${fromBg}, ${target.bg} ${(progress.p * 100).toFixed(2)}%)`
+      }
+    },
+  }, 0)
+  target.circles.forEach((shape, ci) => {
+    jump!.to(circleEls.value[ci]!, {
+      attr: { cx: shape.cx, cy: shape.cy, r: shape.r, fill: shape.fill },
+      ease: EASES[shape.ease],
+    }, 0)
+  })
 }
 </script>
 
