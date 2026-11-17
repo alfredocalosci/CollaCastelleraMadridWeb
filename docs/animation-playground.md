@@ -1,7 +1,7 @@
 # Animation playground
 
 Scroll-driven animation at `/playground/animation`. A full-viewport stage is pinned while the user scrolls; each
-scroll threshold ("step") plays a GSAP transition between two keyframes: background colour, circles, SVG paths and
+scroll threshold ("step") plays a GSAP transition between two keyframes: background colour, circles, SVG artwork and
 text.
 
 Source of truth for the visuals: `docs/animationFrames/f0..f4.svg` (viewBox `1280 x 720`).
@@ -11,7 +11,13 @@ Source of truth for the visuals: `docs/animationFrames/f0..f4.svg` (viewBox `128
 | File | Role |
 | --- | --- |
 | `app/pages/playground/animation.vue` | Template (3 layers + dot nav) and refs. No animation logic. |
-| `app/utils/animationSteps.ts` | The animation table (`ANIMATION_STEPS`), path definitions, types, tuning constants. |
+| `app/utils/animationSteps.ts` | The animation table (`ANIMATION_STEPS`): background, circles, text per step; tuning constants. |
+| `docs/animationFrames/p0..pN.svg` | Artwork overlays, one SVG per frame (source of truth for the artwork). |
+| `scripts/build-artwork.mjs` | Generator: `npm run build:artwork` turns the `p*.svg` into `app/utils/artworkGeometry.ts`. |
+| `app/utils/artworkGeometry.ts` | **Generated**, do not edit. Geometry of every artwork item in every frame. |
+| `app/utils/artworkSettings.ts` | **The tuning file for the artwork**: timing, easing, stagger, effects, morphs. |
+| `app/utils/artwork.ts` | Resolves geometry into drawable elements and their state (opacity/position/size/fill/shape) per frame. |
+| `app/utils/artworkTimeline.ts` | Turns state changes + settings into GSAP tweens. |
 | `app/utils/textPresets.ts` | Named text animations (`lines-up`, `words-fade`). |
 | `app/composables/useScrollScene.ts` | Builds the GSAP timeline, ScrollTrigger, step navigation. |
 
@@ -41,7 +47,7 @@ Per transition, `useScrollScene` adds four segments:
 1. **Background**: GSAP tweens a 0..1 progress; the colour is `color-mix(in oklch, from, to p%)`, so the blend stays
    vivid in the middle. Applied on the background layer, not the section.
 2. **Circles**: `attr` tween of `cx, cy, r, fill`, with the ease of the target circle.
-3. **Paths**: only what changes gets a tween (see below).
+3. **Artwork**: one tween per changed property of every artwork element (see below).
 4. **Text**: previous block out, next block in (see below).
 
 ### Layers
@@ -52,7 +58,7 @@ section.sticky
 └─ stage (aspect-video)
    ├─ svg            will-change-transform
    │   ├─ <g> circles
-   │   └─ <g> paths   (always painted above the circles)
+   │   └─ artwork     (always painted above the circles)
    └─ text layer     will-change-transform   (real HTML)
 ```
 
@@ -67,41 +73,72 @@ notably the text.
 interface AnimationStep {
   bg: string                          // background colour
   circles: CircleShape[]              // ordered, index = z-order (back to front)
-  paths?: Record<string, PathState>   // sparse, keyed by path id
   text: { line1: string, line2: string, anim: TextAnimName }
 }
 ```
 
-Frames are written with the `frame(bg, text, paths, ...circles)` helper.
+Frames are written with the `frame(bg, text, ...circles)` helper.
 
 ### Circles
 
 Matched **by index** between steps. A frame with fewer than `MAX_CIRCLES` (5) circles is padded at the back with clones
 of its backmost circle, so they are invisible but every step has a start and end point for all 5 SVG circles.
 
-### Paths
+### Artwork overlays
 
-Matched **by id**. Two parts:
+The artwork (logo parts, stars, flash, clock, "1", ...) is designed as one SVG per frame, `docs/animationFrames/pN.svg`,
+on the same 1280 x 720 artboard as the circle frames. Conventions:
 
-- `PATHS`: static definition of each path (`d`, `fill`). Every path is rendered in the SVG from the first render,
-  hidden with `opacity: 0` (a hidden path is a state, not a missing element, so the timeline stays reversible).
-- `step.paths`: **sparse** per-step overrides (`x, y, scale, rotation, opacity, fill, d`). A key not mentioned in a
-  step **inherits** the previous step's value.
+- The first child `<g id="pN">` is the frame. Its `<rect>` (background) is ignored.
+- Every other child is a top-level **item**: a `<path>` or a `<g>` of paths, with an `id`. The same id in several
+  frames is the same item. An item missing from a frame is **hidden** in it.
+- Absolute `M L H V C Z` path commands, no transforms/strokes (the Figma export already is).
+- Draw order is merged from all frames (a conflict makes the generator fail).
 
-`resolvePaths()` expands the sparse data into the full state of every path for every step (`RESOLVED_PATHS`). Step 0
-starts from the defaults (`opacity 0`, no transform) plus the definition's `d` and `fill`, so a path must set
-`opacity: 1` in the step where it should appear.
+After changing an SVG run `npm run build:artwork` (rewrites `app/utils/artworkGeometry.ts`).
 
-Two ways to animate a path:
+**State per frame.** `artwork.ts` derives, for every drawn element and every frame, `{ opacity, x, y, scale, fill, d }`:
 
-| Goal | How | Data |
-| --- | --- | --- |
-| Small, simple shape changes form | **Morph** (`MorphSVGPlugin`) | give a different `d` in a later step |
-| Big shape swaps for another | **Crossfade** | two paths: one goes `opacity 1 -> 0`, the other `0 -> 1` in the same step |
+- Present in the frame: `opacity 1`. Absent: `opacity 0`, and it keeps the look of the nearest frame where it is
+  visible (the previous one on a tie), so it fades in/out in place and any repositioning happens while invisible.
+- Position/size is **measured from the geometry**: the item's paths in each frame are fitted to its drawing in the
+  reference frame with a uniform scale + translation (the generator's data must match within 0.5 px, otherwise a warning
+  says that frame is not a plain move/resize). Fill comes from the SVG (`ART_COLOR_FIXES` can correct a colour).
+- **Group or each.** A `<g>` is animated as one element by default (`senyera`, `colla`). Items listed in `ART_EACH`
+  (`stars`) are animated part by part, which allows stagger/jitter and per-part morphing.
+- **Reference frame** (`ART_REF`): the frame whose geometry is the "drawing" (default: last frame where the item
+  appears). Morphs work in its coordinates.
+- **Morph chains** (`ART_MORPHS`): from a given frame a part morphs into the single path of another item
+  (`stars/star_4` -> `flash` -> `clock` -> `One`). Those items are morph targets only and are not drawn.
 
-Example from the placeholders: `badge` morphs diamond -> square -> kite; `ribbonA`/`ribbonB` crossfade in step 3.
+**Effects.** Each change becomes one tween: opacity -> `fade`, position/size -> `move`, shape -> `morph`, colour -> `fill`
+(a recolour that comes with a morph follows the morph's timing). `exit` is a special exit that replaces the plain fade-out: an optional shift (`x`, `y`) and/or
+shrink (`scale` from an edge), then a fade. Defaults are in `ART_DEFAULTS`; `ART_TRANSITIONS[i]` overrides them per transition (`i` = frame arrived at):
 
-> The paths in `PATHS` are placeholders. Replace their `d` values with the ones exported from the frame SVGs.
+```ts
+{ target: 'stars', kind: 'move', at: 0, dur: 0.6, stagger: 0.3, jitter: 0.2, ease: 'power3.inOut' }
+```
+
+| Setting | Meaning |
+| --- | --- |
+| `target` | an item (`senyera`), one part (`stars/star_4`) or all parts of an `each` item (`stars`) |
+| `kind` | `fade`, `move`, `fill`, `morph`, `exit` |
+| `at`, `dur` | start and length inside the transition, `0..1` (keep `at + dur (+ stagger) <= 1`; a dev warning tells you) |
+| `ease` | any GSAP ease |
+| `stagger` | total start spread across the parts of an item (0 = together) |
+| `jitter` | +- fraction of duration variation per part, fixed per element so it is the same on every load |
+| `x`, `y` | `exit` only: shift in drawing units (positive `y` = down), timed by `at`/`dur`/`ease` |
+| `scale`, `axis`, `origin` | `exit` only: end size, its axis, and the edge that stays put (`'50% 100%'` = bottom) |
+| `fadeAt`, `fadeDur` | `exit` only: when the fade starts and how long it lasts |
+
+Everything plays in reverse when scrolling back (an `exit` comes back from where it went). Reverse order is the mirror of
+forward order: what starts first going forward finishes last going back (the pilar is timed this way so it is the last
+thing to return).
+
+`ART_NUDGE` moves a part by a few drawing units in one frame, e.g. to centre the senyera in the small circle of frame 4.
+
+Move/resize is tweened on a plain `{x, y, scale}` object that writes the SVG `transform` attribute, not with GSAP's
+transform plugin: `svgOrigin` proved unreliable when combined with an existing transform.
 
 ### Text
 
@@ -152,8 +189,12 @@ before the next transition starts; otherwise two blocks are visible at once or t
 
 **Add a circle to a frame**: raise `MAX_CIRCLES` if needed and add `c(cx, cy, r, fill)` in z-order.
 
-**Add a path**: add it to `PATHS` (hidden by default), then in the step where it appears set `{ opacity: 1 }`; to morph,
-give a new `d` in later steps; to crossfade, fade it against another path.
+**Add artwork**: draw it in the `pN.svg` frames where it is visible (same id everywhere), run
+`npm run build:artwork`, then tune it in `artworkSettings.ts`. Defaults already fade it in/out and move/resize it;
+add entries to `ART_TRANSITIONS` only to change how.
+
+**Make a part morph**: add it to `ART_EACH` if it lives in a group, point `ART_REF` at the frame where the morph starts,
+and list the shapes in `ART_MORPHS`.
 
 **Add a text animation**: add a name to `TextAnimName` and an entry in `TEXT_PRESETS`. Give it `enter.from`, `enter.to` and `leave`
 (no timing; the composable owns it).
@@ -163,6 +204,6 @@ give a new `d` in later steps; to crossfade, fade it against another path.
 - `SplitText` runs once. If a resize changes how lines wrap, the split is stale (re-splitting would need `autoSplit`
   and rebuilding the timeline).
 - `mask: 'lines'` clips each line to its box; with `leading-none`, glyphs that overflow the line box can be cut.
-- `MorphSVG` records the start shape when the tween first renders, so a path's `d` should only change through the
-  timeline.
+- Elements that exit with an `exit` effect are not reset: it assumes they do not reappear later.
+- The generator/resolver support only absolute `M L H V C Z` paths (the resolver throws on anything else).
 - Text and circle/path colours are not contrast-checked against the animated background.

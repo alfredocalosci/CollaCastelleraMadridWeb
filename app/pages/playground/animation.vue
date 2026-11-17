@@ -12,13 +12,14 @@
           class="absolute inset-0 bg-black will-change-transform"
         />
 
-        <div class="relative w-full max-w-240 aspect-video border border-dashed text-gray-500 border-white">
-          <!-- Layer 2: SVG. Circles first, paths always above -->
+        <div class="relative w-full max-w-240 aspect-video text-gray-500 ">
+          <!-- Layer 2: SVG (decorative). Circles first, artwork always above -->
           <svg
             class="absolute inset-0 w-full h-full will-change-transform"
             width="1280"
             height="720"
             viewBox="0 0 1280 720"
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
           >
             <g>
@@ -32,16 +33,47 @@
                 :fill="c.fill"
               />
             </g>
-            <g>
+            <!-- Artwork overlays (docs/animationFrames/p*.svg), drawn from frame-0 state; GSAP takes over on mount -->
+            <template v-for="item in artwork" :key="item.id">
+              <g v-if="item.mode === 'each'" :id="item.id">
+                <path
+                  v-for="t in item.targets"
+                  :key="t.key"
+                  :ref="(el) => setArt(t.key, el)"
+                  :d="t.d"
+                  :fill="t.states[0]!.fill"
+                  :fill-rule="t.fillRule"
+                  :opacity="t.states[0]!.opacity"
+                  :transform="artTransform(t.states[0]!)"
+                />
+              </g>
+              <g
+                v-else-if="item.mode === 'group'"
+                :id="item.id"
+                :ref="(el) => setArt(item.id, el)"
+                :fill="item.targets[0]!.states[0]!.fill"
+                :opacity="item.targets[0]!.states[0]!.opacity"
+                :transform="artTransform(item.targets[0]!.states[0]!)"
+              >
+                <path
+                  v-for="leaf in item.targets[0]!.leaves"
+                  :key="leaf.id"
+                  :d="leaf.d"
+                  :fill="leaf.fill"
+                  :fill-rule="leaf.fillRule"
+                />
+              </g>
               <path
-                v-for="p in initialPaths"
-                :key="p.id"
-                :ref="(el) => { if (el) pathEls[p.id] = el as SVGPathElement }"
-                :d="p.d"
-                :fill="p.fill"
-                :opacity="p.opacity"
+                v-else
+                :id="item.id"
+                :ref="(el) => setArt(item.id, el)"
+                :d="item.targets[0]!.d"
+                :fill="item.targets[0]!.states[0]!.fill"
+                :fill-rule="item.targets[0]!.fillRule"
+                :opacity="item.targets[0]!.states[0]!.opacity"
+                :transform="artTransform(item.targets[0]!.states[0]!)"
               />
-            </g>
+            </template>
           </svg>
 
           <!-- Layer 3: real HTML text, one block per step stacked in the same grid cell.
@@ -71,8 +103,9 @@
             type="button"
             :aria-label="`Go to step ${i + 1}`"
             :aria-current="i === activeStep"
-            class="w-6 h-6 rounded-full bg-white cursor-pointer border-2 box-border"
-            :class="i === activeStep ? 'border-gray-900' : 'border-transparent'"
+            class="w-6 h-6 rounded-full cursor-pointer border-4 box-border"
+            :class="i === activeStep ? 'border-white' : 'border-transparent'"
+            :style="{ backgroundColor: step.bg }"
             @click="goToStep(i)"
           />
         </nav>
@@ -89,12 +122,15 @@
 // Data lives in app/utils/animationSteps.ts and app/utils/textPresets.ts,
 // the timeline and scroll logic in app/composables/useScrollScene.ts (all auto-imported)
 const steps = ANIMATION_STEPS
-const initialPaths = Object.entries(RESOLVED_PATHS[0]!).map(([id, state]) => ({ id, ...state }))
+const artwork = ARTWORK_RENDER
 
 const trackEl = ref<HTMLElement | null>(null)
 const bgEl = ref<HTMLElement | null>(null)
 const circleEls = ref<SVGCircleElement[]>([])
-const pathEls = ref<Record<string, SVGPathElement>>({})
+const artEls = ref<Record<string, SVGElement>>({})
+const setArt = (key: string, el: unknown) => {
+  if (el) artEls.value[key] = el as SVGElement
+}
 const textEls = ref<HTMLElement[]>([])
 
 const { activeStep, goToStep } = useScrollScene({
@@ -102,7 +138,7 @@ const { activeStep, goToStep } = useScrollScene({
   track: trackEl,
   bg: bgEl,
   circles: circleEls,
-  paths: pathEls,
+  art: artEls,
   texts: textEls,
 })
 </script>

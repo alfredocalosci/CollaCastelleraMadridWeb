@@ -9,7 +9,7 @@ interface SceneOptions {
   track: Ref<HTMLElement | null> // tall element the sticky stage scrolls through
   bg: Ref<HTMLElement | null> // background layer (colour is animated here, not on the section)
   circles: Ref<SVGCircleElement[]>
-  paths: Ref<Record<string, SVGPathElement>>
+  art: Ref<Record<string, SVGElement>> // artwork elements by target key (see artwork.ts)
   texts: Ref<HTMLElement[]> // one block per step, each with two <p> lines
 }
 
@@ -18,15 +18,12 @@ interface SceneOptions {
 const TEXT_OUT = { start: 0, duration: 0.3, stagger: 0.1 } // ends at 0.4
 const TEXT_IN = { start: 0.5, duration: 0.3, stagger: 0.15 } // ends at 0.95
 
-const PATH_TWEENED =['x', 'y', 'scale', 'rotation', 'opacity', 'fill'] as const
-
 /**
  * Scroll-driven scene: a paused master timeline (one unit per step transition, a label per step)
  * played to the step matching the scroll position. Pinning is done by CSS sticky.
  */
-export function useScrollScene({ steps, track, bg, circles, paths, texts }: SceneOptions) {
+export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneOptions) {
   const activeStep = ref(0)
-  const resolvedPaths = resolvePaths(steps)
 
   let ctx: gsap.Context | undefined
   let trigger: ScrollTrigger | undefined
@@ -45,7 +42,7 @@ export function useScrollScene({ steps, track, bg, circles, paths, texts }: Scen
     if (disposed || !track.value) return
 
     ctx = gsap.context(() => {
-      initPaths()
+      initArtwork(art.value)
       const textParts = splitTexts()
       initText(textParts)
 
@@ -55,7 +52,7 @@ export function useScrollScene({ steps, track, bg, circles, paths, texts }: Scen
         if (i === 0) return
         buildBackground(tl!, i)
         buildCircles(tl!, i)
-        buildPaths(tl!, i)
+        buildArtworkSegment(tl!, i, art.value)
         buildText(tl!, i, textParts)
         tl!.addLabel(`step${i}`, i)
       })
@@ -82,14 +79,6 @@ export function useScrollScene({ steps, track, bg, circles, paths, texts }: Scen
   })
 
   // --- initial state -------------------------------------------------------
-
-  // Transforms can't be expressed as SVG attributes in the template, so step 0 is applied here
-  function initPaths() {
-    for (const [id, state] of Object.entries(resolvedPaths[0]!)) {
-      const el = paths.value[id]
-      if (el) gsap.set(el, { x: state.x, y: state.y, scale: state.scale, rotation: state.rotation, opacity: state.opacity, fill: state.fill })
-    }
-  }
 
   // Split every line of every text block; returns the lines/words of each block, flattened
   function splitTexts() {
@@ -148,30 +137,6 @@ export function useScrollScene({ steps, track, bg, circles, paths, texts }: Scen
         i - 1,
       )
     })
-  }
-
-  // Only what changes gets a tween: transform/opacity/fill as fromTo, geometry (`d`) as a morph
-  function buildPaths(tl: gsap.core.Timeline, i: number) {
-    for (const id of Object.keys(resolvedPaths[i]!)) {
-      const el = paths.value[id]
-      if (!el) continue
-      const from = resolvedPaths[i - 1]![id]!
-      const to = resolvedPaths[i]![id]!
-
-      const changed = PATH_TWEENED.filter(k => from[k] !== to[k])
-      if (changed.length) {
-        const fromVars: Record<string, string | number> = {}
-        const toVars: Record<string, string | number> = {}
-        for (const k of changed) {
-          fromVars[k] = from[k]
-          toVars[k] = to[k]
-        }
-        tl.fromTo(el, fromVars, { ...toVars, ease: 'power2.inOut', immediateRender: false }, i - 1)
-      }
-      if (from.d !== to.d) {
-        tl.to(el, { morphSVG: { shape: to.d }, ease: 'power2.inOut' }, i - 1)
-      }
-    }
   }
 
   // Previous block's text leaves in the first half of the transition, the new block enters in the second.
