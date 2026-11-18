@@ -1,6 +1,6 @@
 <template>
   <header 
-    class="w-full bg-black py-2.5 border-b border-white/50 fixed top-0 z-40 transition-transform duration-300 "
+    class="w-full bg-black py-2.5  fixed top-0 z-40 transition-transform duration-300 "
     :class="{ '-translate-y-full': !showHeader }"
   >
     <div class="ccm_container h-full flex justify-between lg:items-center ">

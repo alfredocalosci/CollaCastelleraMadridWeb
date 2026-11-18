@@ -3,16 +3,16 @@
     <!-- Tall track: the sticky section stays in view while the track scrolls past (pure CSS pinning) -->
     <div
       ref="trackEl"
-      :style="{ height: `calc(100vh + ${SCROLL_PER_STEP * steps.length}px)` }"
+      :style="{ height: `calc(90vh + ${SCROLL_PER_STEP * steps.length}px)` }"
     >
-      <section class="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+      <section class="sticky top-0 h-[90vh] flex items-center justify-center overflow-hidden">
         <!-- Layer 1: animated background colour, on its own compositor layer -->
         <div
           ref="bgEl"
           class="absolute inset-0 bg-black will-change-transform"
         />
 
-        <div class="relative w-full max-w-240 aspect-video text-gray-500 ">
+        <div class="relative w-full max-w-240 aspect-video text-gray-500 border-y border-dashed border-white/30">
           <!-- Layer 2: SVG (decorative). Circles first, artwork always above -->
           <svg
             class="absolute inset-0 w-full h-full will-change-transform"
@@ -93,7 +93,7 @@
 
           <!-- Layer 3: real HTML text, one block per step stacked in the same grid cell.
                Every block stays in the DOM (crawlable); inactive ones are only visibility:hidden -->
-          <div class="absolute inset-0 px-6 pt-6 text-white font-display uppercase grid content-start will-change-transform">
+          <div class="absolute inset-0  pt-6 text-white font-display uppercase grid content-start will-change-transform">
             <div
               v-for="(step, i) in steps"
               :key="i"
@@ -118,7 +118,7 @@
             type="button"
             :aria-label="`Go to step ${i + 1}`"
             :aria-current="i === activeStep"
-            class="w-6 h-6 rounded-full cursor-pointer border-4 box-border"
+            class="w-6 h-6 lg:w-4 lg:h-4 rounded-full cursor-pointer border-4 box-border"
             :class="i === activeStep ? 'border-white' : 'border-transparent'"
             :style="{ backgroundColor: step.bg }"
             @click="goToStep(i)"
