@@ -89,7 +89,7 @@
               <p class="leading-none">
                 {{ step.text.line1 }}
               </p>
-              <p class="text-3xl font-bold leading-none -mt-2">
+              <p class="text-4xl font-extrabold leading-none -mt-3">
                 {{ step.text.line2 }}
               </p>
             </div>

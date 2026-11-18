@@ -3,11 +3,11 @@
     <div class="ccm_container grid md:grid-cols-3 gap-x-6 ">
 
       <div class="flex items-center gap-x-6">
-        <!-- v-gsap.whenVisible.fromTo="[{ scale: 0 }, { scale: 1 }]" -->
-        <img 
-          src="/img/CCM_solo.png"
+        <img
+          v-gsap.whenVisible.once.fromTo="[{ scale: 0 }, { scale: 1, duration: 1.2, ease: 'elastic.out(1, 0.5)' }]"
+          src="/img/CCM_solo_2026.svg"
           alt="Colla Castellera de Madrid logo"
-          class=" mb-4 w-20 h-auto"
+          class="mb-4 w-20 h-auto"
         />
         <h1 class="font-display font-bold text-white text-base/5 subpixel-antialiased">Colla Castellera<br/><span class="font-light"> de </span>Madrid</h1>
       </div>

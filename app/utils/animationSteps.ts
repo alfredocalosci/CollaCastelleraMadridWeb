@@ -62,13 +62,13 @@ const frame = (bg: string, text: StepText, ...shapes: CircleShape[]): AnimationS
 export const ANIMATION_STEPS: AnimationStep[] = [
   // f0
   frame('#000000',
-    { line1: 'Animation Playground', line2: 'Second line of text', anim: 'lines-up' },
+    { line1: 'hacemos', line2: 'Castells', anim: 'lines-up' },
     c(320, 486, 180, '#000000'),
     c(319.239, 486, 141.225, '#DF1A22'),
   ),
   // f1
   frame('#E01A22',
-    { line1: 'Placeholder step one', line2: 'Red circles growing', anim: 'words-fade' },
+    { line1: 'en', line2: 'Madrid', anim: 'words-fade' },
     c(960, 360, 1194.5, '#E01A22'),
     c(960, 360, 636, '#F4A4A7'),
     c(960, 360, 565.5, '#EF767B'),
@@ -77,7 +77,7 @@ export const ANIMATION_STEPS: AnimationStep[] = [
   ),
   // f2
   frame('#BBB4AF',
-    { line1: 'Placeholder step two', line2: 'Green hills rising', anim: 'lines-up' },
+    { line1: 'nuestro local está en', line2: 'Vallecas', anim: 'lines-up' },
     c(704.366, 410.468, 54.2667, '#F9D80F'),
     c(925.467, 642.933, 310.933, '#137534'),
     c(671, 824.801, 418, '#11A242'),
@@ -85,13 +85,13 @@ export const ANIMATION_STEPS: AnimationStep[] = [
   ),
   // f3
   frame('#F9D80F',
-    { line1: 'Placeholder step three', line2: 'Yellow sun', anim: 'words-fade' },
+    { line1: 'ensayamos los', line2: 'Miércoles', anim: 'words-fade' },
     c(960, 500, 320, '#FFFFFF'),
     c(960, 500, 253, '#F9D80F'),
   ),
   // f4
   frame('#118BA1',
-    { line1: 'Placeholder step four', line2: 'Teal finish', anim: 'lines-up' },
+    { line1: 'en 2027 ', line2: 'cumplimos', anim: 'lines-up' },
     c(1004.5, 441.5, 209.5, '#FFFFFF'),
     c(1004.5, 441.5, 53.5, '#118BA1'),
   ),
