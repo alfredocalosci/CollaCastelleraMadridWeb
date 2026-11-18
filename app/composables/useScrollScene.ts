@@ -11,6 +11,7 @@ interface SceneOptions {
   circles: Ref<SVGCircleElement[]>
   art: Ref<Record<string, SVGElement>> // artwork elements by target key (see artwork.ts)
   texts: Ref<HTMLElement[]> // one block per step, each with two <p> lines
+  image: Ref<HTMLElement | null> // frame-0 image, slides down out of the viewport in the transition to frame 1
 }
 
 // Text timing inside one step transition (timeline units, a transition is 1 unit long).
@@ -22,7 +23,10 @@ const TEXT_IN = { start: 0.5, duration: 0.3, stagger: 0.15 } // ends at 0.95
  * Scroll-driven scene: a paused master timeline (one unit per step transition, a label per step)
  * played to the step matching the scroll position. Pinning is done by CSS sticky.
  */
-export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneOptions) {
+export function useScrollScene({ steps, track, bg, circles, art, texts, image }: SceneOptions) {
+  // Timeline position of every step: one unit per transition plus its lead (see STEP_LEAD)
+  const stepAt = steps.reduce<number[]>((acc, _, i) => [...acc, i === 0 ? 0 : acc[i - 1]! + 1 + (STEP_LEAD[i] ?? 0)], [])
+
   const activeStep = ref(0)
 
   let ctx: gsap.Context | undefined
@@ -51,11 +55,14 @@ export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneO
       tl.addLabel('step0', 0)
       steps.forEach((_, i) => {
         if (i === 0) return
-        buildBackground(tl!, i - 1, i, i - 1)
-        buildCircles(tl!, i - 1, i, i - 1)
-        buildArtworkSegment(tl!, i - 1, i, i - 1, art.value)
-        buildText(tl!, i - 1, i, i - 1, textParts)
-        tl!.addLabel(`step${i}`, i)
+        const lead = STEP_LEAD[i] ?? 0
+        const at = stepAt[i - 1]! + lead // the transition proper starts after its lead
+        if (i === 1) buildImage(tl!, stepAt[0]!)
+        buildBackground(tl!, i - 1, i, at)
+        buildCircles(tl!, i - 1, i, at)
+        buildArtworkSegment(tl!, i - 1, i, at, art.value)
+        buildText(tl!, i - 1, i, at, textParts)
+        tl!.addLabel(`step${i}`, stepAt[i])
       })
 
       // Warm-up: render the whole timeline forward and back once, so every tween records its start value in the
@@ -150,6 +157,18 @@ export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneO
     })
   }
 
+  // Frame-0 image: leaves downwards (first, before anything else moves) and comes back last on the way back.
+  // Scroll timeline: frame 0 -> 1 only. Direct jump: straight to the state of the target frame.
+  function buildImage(tl: gsap.core.Timeline, at: number, direct?: { to: number }) {
+    if (!image.value) return
+    const hidden = direct ? direct.to !== 0 : true
+    tl.to(image.value, {
+      y: hidden ? STAGE_IMAGE.exitY : 0,
+      duration: IMAGE_EXIT.dur,
+      ease: hidden ? IMAGE_EXIT.ease : IMAGE_EXIT.backEase,
+    }, at)
+  }
+
   // The `from` block's text leaves in the first half of the transition, the `to` block enters in the second.
   // Blocks stay in the DOM (crawlable) and are only toggled with visibility via autoAlpha.
   // Direct jump: every block except the target leaves (whatever was half way through a transition is cleaned up).
@@ -183,7 +202,7 @@ export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneO
   // Plays (or reverses) the timeline to the given step; duration scales with the number of steps crossed
   function playToStep(index: number, onComplete?: () => void) {
     if (!tl) return
-    const distance = Math.abs(index - activeStep.value)
+    const distance = Math.abs(stepAt[index]! - stepAt[activeStep.value]!)
     activeStep.value = index
     tl.tweenTo(`step${index}`, { duration: distance * DURATION, ease: 'none', overwrite: true, onComplete })
   }
@@ -210,6 +229,7 @@ export function useScrollScene({ steps, track, bg, circles, art, texts }: SceneO
     buildCircles(jump, activeStep.value, index, 0, true)
     buildArtworkSegment(jump, activeStep.value, index, 0, art.value, 'direct')
     buildText(jump, activeStep.value, index, 0, textParts, true)
+    buildImage(jump, 0, { to: index })
     activeStep.value = index
   }
 

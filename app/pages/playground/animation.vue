@@ -76,6 +76,21 @@
             </template>
           </svg>
 
+          <!-- Frame-0 image (docs/animationFrames/i0.svg), placed in artboard units; slides down out of the viewport -->
+          <img
+            ref="imageEl"
+            :src="STAGE_IMAGE.src"
+            alt=""
+            aria-hidden="true"
+            class="absolute will-change-transform"
+            :style="{
+              left: `${STAGE_IMAGE.x / 12.8}%`,
+              top: `${STAGE_IMAGE.y / 7.2}%`,
+              width: `${STAGE_IMAGE.w / 12.8}%`,
+              height: `${STAGE_IMAGE.h / 7.2}%`,
+            }"
+          >
+
           <!-- Layer 3: real HTML text, one block per step stacked in the same grid cell.
                Every block stays in the DOM (crawlable); inactive ones are only visibility:hidden -->
           <div class="absolute inset-0 px-6 pt-6 text-white font-display uppercase grid content-start will-change-transform">
@@ -132,6 +147,7 @@ const setArt = (key: string, el: unknown) => {
   if (el) artEls.value[key] = el as SVGElement
 }
 const textEls = ref<HTMLElement[]>([])
+const imageEl = ref<HTMLElement | null>(null)
 
 const { activeStep, goToStep } = useScrollScene({
   steps,
@@ -140,5 +156,6 @@ const { activeStep, goToStep } = useScrollScene({
   circles: circleEls,
   art: artEls,
   texts: textEls,
+  image: imageEl,
 })
 </script>

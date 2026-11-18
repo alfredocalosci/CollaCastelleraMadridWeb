@@ -95,6 +95,9 @@ on the same 1280 x 720 artboard as the circle frames. Conventions:
 - Absolute `M L H V C Z` path commands, no transforms/strokes (the Figma export already is).
 - Draw order is merged from all frames (a conflict makes the generator fail).
 
+`pNplus.svg` (e.g. `p4plus.svg`) holds **extra items of the same frame N**: the generator merges them into frame N and
+draws them after pN's items. Item ids are reduced to ASCII (`AÑOS` -> `ANOS`).
+
 After changing an SVG run `npm run build:artwork` (rewrites `app/utils/artworkGeometry.ts`).
 
 **State per frame.** `artwork.ts` derives, for every drawn element and every frame, `{ opacity, x, y, scale, fill, d }`:
@@ -139,6 +142,17 @@ thing to return).
 
 Move/resize is tweened on a plain `{x, y, scale}` object that writes the SVG `transform` attribute, not with GSAP's
 transform plugin: `svgOrigin` proved unreliable when combined with an existing transform.
+
+### Frame-0 image
+
+`public/img/cuatre.png` (placement documented in `docs/animationFrames/i0.svg`) is a plain `<img>` between the SVG and
+the text layers, positioned in artboard units (`STAGE_IMAGE` in `animationSteps.ts`). It is not part of the artwork
+pipeline. In the transition 0 -> 1 it slides down by `100vh` (out of the viewport), `IMAGE_EXIT` sets its timing.
+To make it leave **before** anything else moves, that transition has a **lead** (`STEP_LEAD[1] = 0.4` units) in front
+of it: step positions on the master timeline are `stepAt[i]`, not `i`, the image tween lives in the lead and every other
+tween of the transition is shifted by it. Backward everything mirrors: circles/path/text first, the image last.
+`playToStep` scales its duration by timeline distance. Direct jumps tween the image to the state of the target frame
+(down unless the target is frame 0).
 
 ### Text
 
@@ -200,6 +214,9 @@ before the next transition starts; otherwise two blocks are visible at once or t
 | `MAX_CIRCLES` | `animationSteps.ts` | number of SVG circles (must be >= the largest frame) |
 
 ## Recipes
+
+**Add a lead before a transition** (something that must move first): set `STEP_LEAD[i]` and put the tween at
+`stepAt[i - 1]` (see `buildImage`).
 
 **Add a step**: append a `frame(...)` to `ANIMATION_STEPS`. The track height, dots and timeline follow automatically.
 

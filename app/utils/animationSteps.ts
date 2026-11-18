@@ -15,6 +15,15 @@ export const SCROLL_PER_STEP = 300 // px of scrolling between two step threshold
 export const DURATION = 1 // seconds a single step-to-step transition takes (time based, not tied to scroll)
 export const JUMP_DURATION = 1.2 // seconds a direct jump (dot click between non-neighbouring frames) takes
 
+// Frame-0 image (docs/animationFrames/i0.svg, artwork cuatre.png): a plain HTML <img> over the SVG, placed in
+// artboard units (1280 x 720). It slides down out of the viewport before the transition to frame 1 starts.
+export const STAGE_IMAGE = { src: '/img/cuatre.png', x: 820, y: 107, w: 346, h: 613, exitY: '100vh' }
+
+// Extra timeline time (in transition units) in front of the transition INTO a step, during which only the
+// image moves. The transition itself keeps its normal 0..1 timing, shifted by this lead.
+export const STEP_LEAD: Record<number, number> = { 1: 0.4 }
+export const IMAGE_EXIT = { dur: 0.4, ease: 'power2.in', backEase: 'power2.out' } // dur must be <= STEP_LEAD[1]
+
 // ---------------------------------------------------------------------------
 // Circles: ordered list, index = z-order (back to front), matched by index between steps
 // ---------------------------------------------------------------------------

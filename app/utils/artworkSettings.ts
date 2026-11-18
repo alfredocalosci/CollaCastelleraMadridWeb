@@ -66,6 +66,8 @@ export const ART_TRANSITIONS: Record<number, Fx[]> = {
   4: [
     { target: 'stars/star_4', kind: 'morph', at: 0, dur: 0.9 },
     { target: 'senyera', kind: 'fade', at: 0.55, dur: 0.4 },
+    // "AÑOS" (p4plus.svg, id ANOS): outlined text, fades in together with the senyera
+    { target: 'ANOS', kind: 'fade', at: 0.55, dur: 0.4 },
   ],
 }
 

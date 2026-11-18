@@ -67,17 +67,25 @@ function itemOf(node) {
   return item
 }
 
+// pN.svg = frame N. pNplus.svg = extra items that belong to the same frame N (merged into it, drawn after pN's items)
 const files = readdirSync(DIR)
-  .filter(f => /^p\d+\.svg$/.test(f))
-  .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
+  .filter(f => /^p\d+(plus)?\.svg$/.test(f))
+  .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)) || a.length - b.length)
 
-const frames = files.map((f) => {
+// Ids may come entity-encoded as UTF-8 bytes from Figma ("A&#195;&#145;OS"): decode, then reduce to plain ASCII
+const cleanId = id => id && Buffer.from(id.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)), 'latin1')
+  .toString('utf8').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w/-]/g, '_')
+
+const frames = []
+for (const f of files) {
   const svg = parse(readFileSync(join(DIR, f), 'utf8')).children.find(n => n.tag === 'svg')
   const frame = svg.children.find(n => n.tag === 'g')
-  const items = {}
-  const order = []
+  const index = parseInt(f.slice(1))
+  const target = frames[index] ??= { items: {}, order: [] }
+  const { items, order } = target
   for (const child of frame.children) {
     if (child.tag === 'rect') continue
+    if (child.attrs.id) child.attrs.id = cleanId(child.attrs.id)
     const item = itemOf(child)
     if (!item.id) {
       console.warn(`  ! ${f}: top-level <${child.tag}> without id ignored`)
@@ -87,8 +95,7 @@ const frames = files.map((f) => {
     order.push(item.id)
   }
   console.log(`${f}: ${order.map(id => `${id}(${items[id].leaves.length})`).join(', ')}`)
-  return { items, order }
-})
+}
 
 // Global draw order: topological merge of every frame's order (first appearance breaks ties)
 const first = []
